@@ -184,7 +184,7 @@ class MLP:
         w_init_all = []  # Input weights
         w_init_all_out = []  # Output weights
         ita_init = self.size_info(weights, nn, index, v, training_data, rewards, actions, variance) + self.eta_node
-        print("node ita", ita_init)
+        #print("node ita", ita_init)
         for init in range(10):
             ita = []
             w_init = []
@@ -207,7 +207,7 @@ class MLP:
                 x = max(i[1])
                 loc = i[0]  # Which init
                 index = i[1].index(x)  # Which pos
-        print("node radio to init", x)
+        #print("node radio to init", x)
         if self.max > x > thres:
             w[index] = w_init_all[loc][index]
             w[index + 1] = w_init_all_out[loc][index]
@@ -245,16 +245,12 @@ class MLP:
                 # Added layer position and initial activation function parameters.
                 # The index number is the hidden layer number.
                 index[str(pos[0])] = act_para
-                print("index", index)
-                print("act para", act_para)
                 ita.append(self.size_info(weights, nn, index, v, training_data, rewards, actions, variance))
                 w_init.append(deepcopy(lp))
                 w_init_out.append(deepcopy(lp_2))
                 weights = deepcopy(w)
                 index = deepcopy(index_ori)
             ratio.append([a / ita_init for a in ita])
-            print("len", len(weights))
-            print("ita", ita)
             # Append for each init
             w_init_all.append(w_init)
             w_init_all_out.append(w_init_out)
@@ -280,9 +276,6 @@ class MLP:
             print("added hidden layer: ", weight_init)
         else:
             print("no change in hidden layer")
-        print("layer ratio to initial", x)
-        print("ratio", ratio)
-        print("size", size)
         return w, size, index_ori
 
     def fisher_matrix(self, grads, gs, grad_act=None, gs_act=None):
@@ -316,7 +309,7 @@ class MLP:
         dtheta_re = torch.cat(grads, 0)
         if grad_act:
             for key in grad_act.keys():
-                grad_act[key] = grad_act[key] / self.traj  # len(gs.T)
+                grad_act[key] = grad_act[key] / self.traj 
                 dtheta_re = torch.cat((dtheta_re, grad_act[key].view([-1, 1])), 0)
                 form.append((grad_act[key].view([-1, 1])).shape)
         fisher = torch.mm(gs, gs.T) / self.traj  # normalize by traj
