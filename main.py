@@ -63,8 +63,7 @@ index = {}  # Activation function parameter for each new layer, {layer_index:[pa
 start = 1
 T = 300  # max iteration amount.
 
-# Number of trajectories to make in each iteration.
-tra = 100
+tra = 100  # Number of trajectories to make in each iteration.
 lr_min = 0.000001  # Min. of lr.
 threshold = [0, 8, 3]  # Threshold for setting lr: begin to count/reduce/reset.
 decay = 0.7  # lr decay.
@@ -105,7 +104,6 @@ for epo in range(start, T):
 
     # Sample trajectories.
     training_data, R, actions, mean, variance = data_collector.letsgobrandon(weights, nn, index, var)
-    #print("extern std: ", var, "variance: ", float(nn.var + var))
     print(f"extern std: {var: .2f}, variance: {float(nn.var + var):.2f}")
     # Compute statistics regarding sampled trajectories.
     avr_reward, best, worst, avr, m, upper, lower = data_collector.save(R, tra, avr_reward, best, worst, m, upper,
@@ -121,16 +119,16 @@ for epo in range(start, T):
 
     # Compute the value function
     v_func = data_collector.train_data_v(training_data, R)
-    # rain the value function estimator
+    # Train the value function estimator
     v.train_v_func_in_loop(v_func, v, 0.002)  # threshold
     print("used episodes", len(training_data))
-    # if the current avr reward is better than before, save the network and var
+    # If the current avr reward is better than before, save the network and var
     if avr > max(avr_reward):
         print("save policy")
         data_collector.save_weights(weights, v, size, index, var_best)
         var_best = deepcopy(var_decay)
         print(size)
-    # check the training state
+    # Check the training state
     reduce, reset, fine_tune = if_reset(avr, avr_reward, threshold, ft=fine_tune)
     # reset: fall back to the last best model
     if reset and avr < 400:
@@ -150,7 +148,7 @@ for epo in range(start, T):
         if expanding_layer and old_size == size and avr < 410:
             weights, size, index = nn.choose_layer(weights, nn, size, threshold_layer, index, v,
                                                    training_data, R, actions, variance, act_para)
-    # otherwise, simply train new weights
+    # Otherwise, simply train new weights
     else:
         weights, index = nn.backward_ng2_fast(training_data, actions, R, weights, v, variance, index)
 
@@ -160,10 +158,10 @@ for epo in range(start, T):
           f"variance: {index}")
 print(max(avr_reward), "\n", avr_reward.index(max(avr_reward)) + 1)
 
-# when a desired good reward is reached, display the corresponding variance
+# When a desired good reward is reached, display the corresponding variance
 if min_var:
     print("var: ", min(min_var))
-# show result and save
+# Show result and save
 diagram(T, m, upper, lower)
-# render
+# Render
 show(weights, MLP(tra, l_rate, seed, size, variance=extern_var ** var_decay), index)
