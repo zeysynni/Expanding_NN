@@ -10,7 +10,7 @@ warnings.filterwarnings("ignore")
 
 # This code does the learning of policy and expanding of the policy network during training.
 # Only mean value of the action distribution is learned.
-# Variance is determined externally
+# Variance is determined externally.
 
 
 def if_reset(average, average_reward, thr, red=False, res=False, ft=False):
@@ -20,10 +20,10 @@ def if_reset(average, average_reward, thr, red=False, res=False, ft=False):
     Args:
         average: Average return of current iteration.
         average_reward(list): History of returns over iterations.
-        thr:
-        red:
-        res:
-        ft:
+        thr(list[int1, int2, int3]): Threshold for setting lr: begin to count/reduce/reset.
+        red: Reduce lr & check if we need to expand.
+        res: Reset weight & variance.
+        ft: finetune, reduce the lr to a very small value.
     :return:
     Check weather reduce or reset lr, in case certain amount of rewards are achieved, stop training
     """
@@ -52,9 +52,9 @@ def if_reset(average, average_reward, thr, red=False, res=False, ft=False):
     return red, res, ft
 
 
-seed = 1
-l_rate = 1
-size = [[5, 1], [1, 1]]  # Initial policy network size.
+seed = 0
+l_rate = .05
+size = [[5, 5], [5, 1]]  # Initial policy network size.
 threshold_node, threshold_layer = 1.5, 1.5  # Threshold for expanding node & layer.
 expanding_node, expanding_layer = True, True
 act_para = torch.tensor((1., 0., 0.)).requires_grad_(True)  # Parameters for new activation function.
@@ -105,7 +105,8 @@ for epo in range(start, T):
 
     # Sample trajectories.
     training_data, R, actions, mean, variance = data_collector.letsgobrandon(weights, nn, index, var)
-    print("extern std: ", var, "variance: ", float(nn.var + var))
+    #print("extern std: ", var, "variance: ", float(nn.var + var))
+    print(f"extern std: {var: .2f}, variance: {float(nn.var + var):.2f}")
     # Compute statistics regarding sampled trajectories.
     avr_reward, best, worst, avr, m, upper, lower = data_collector.save(R, tra, avr_reward, best, worst, m, upper,
                                                                         lower)
@@ -114,8 +115,9 @@ for epo in range(start, T):
     if avr > 415:
         min_var.append(nn.var + var)
         show(weights, nn, index)
-    print("average reward", avr)
-    print(avr_reward)
+
+    print(f"average return: {avr: .2f}")
+    print(f"returns history: {avr_reward}")
 
     # Compute the value function
     v_func = data_collector.train_data_v(training_data, R)
@@ -151,10 +153,11 @@ for epo in range(start, T):
     # otherwise, simply train new weights
     else:
         weights, index = nn.backward_ng2_fast(training_data, actions, R, weights, v, variance, index)
-    print("best trajectory:", best[epo - start],
-          "worst trajectory:", worst[epo - start],
-          "size:", size,
-          "index:", index)
+
+    print(f"best trajectory: {best[epo - start]: .2f},"
+          f"variance: {worst[epo - start]:.2f},"
+          f"variance: {size},"
+          f"variance: {index}")
 print(max(avr_reward), "\n", avr_reward.index(max(avr_reward)) + 1)
 
 # when a desired good reward is reached, display the corresponding variance
